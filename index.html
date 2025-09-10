@@ -190,7 +190,7 @@
         /* Excel工作表区域 */
         .excel-worksheet {
             background: #ffffff;
-            height: calc(100vh - 225px);
+            height: calc(100vh - 235px);
             overflow: auto;
             position: relative;
         }
@@ -314,7 +314,7 @@
         .excel-statusbar {
             background: #0078d4;
             color: white;
-            height: 22px;
+            height: 28px;
             display: flex;
             align-items: center;
             padding: 0 15px;
@@ -383,25 +383,77 @@
             transition: width 0.3s;
         }
 
-        /* 隐藏的游戏消息 */
-        .game-message {
-            position: fixed;
-            top: 150px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #323130;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1001;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+         /* Excel风格的隐蔽消息系统 */
+         .excel-status-message {
+             background: #f3f2f1;
+             color: #323130;
+             font-size: 11px;
+             padding: 2px 8px;
+             border-left: 3px solid #0078d4;
+             transition: all 0.3s ease;
+             opacity: 0;
+             transform: translateX(-10px);
+         }
 
-        .game-message.show {
-            opacity: 1;
-        }
+         .excel-status-message.show {
+             opacity: 1;
+             transform: translateX(0);
+         }
+
+         .excel-status-message.success {
+             border-left-color: #107c10;
+             background: #f3f9f3;
+         }
+
+         .excel-status-message.warning {
+             border-left-color: #ff8c00;
+             background: #fff8f0;
+         }
+
+         .excel-status-message.error {
+             border-left-color: #d13438;
+             background: #fdf2f2;
+         }
+
+         /* 状态栏消息区域 */
+         .status-message-area {
+             flex: 1;
+             margin-left: 20px;
+             overflow: hidden;
+         }
+
+         /* 单元格闪烁效果 */
+         .cell-flash {
+             animation: cellFlash 0.6s ease-in-out;
+         }
+
+         @keyframes cellFlash {
+             0% { background-color: inherit; }
+             50% { background-color: #e6f3ff; }
+             100% { background-color: inherit; }
+         }
+
+         /* 经验值增长动画 */
+         .exp-gain {
+             position: absolute;
+             color: #107c10;
+             font-size: 10px;
+             font-weight: bold;
+             pointer-events: none;
+             z-index: 100;
+             animation: expFloat 1.5s ease-out forwards;
+         }
+
+         @keyframes expFloat {
+             0% {
+                 opacity: 1;
+                 transform: translateY(0);
+             }
+             100% {
+                 opacity: 0;
+                 transform: translateY(-30px);
+             }
+         }
 
         /* 游戏结束界面 */
         .game-over-panel {
@@ -623,17 +675,20 @@
         </div>
     </div>
 
-    <!-- Excel状态栏 -->
-    <div class="excel-statusbar">
-        <div class="status-left">
-            <span>就绪</span>
-            <span id="gameStatus">经验值: 0 | 等级: 1</span>
-        </div>
-        <div class="status-right">
-            <span>100%</span>
-            <span>第 1 页，共 1 页</span>
-        </div>
-    </div>
+     <!-- Excel状态栏 -->
+     <div class="excel-statusbar">
+         <div class="status-left">
+             <span>就绪</span>
+             <span id="gameStatus">经验值: 0 | 等级: 1</span>
+             <div class="status-message-area">
+                 <div class="excel-status-message" id="statusMessage"></div>
+             </div>
+         </div>
+         <div class="status-right">
+             <span>100%</span>
+             <span>第 1 页，共 1 页</span>
+         </div>
+     </div>
 
     <!-- 隐藏的游戏面板 -->
     <div class="game-panel" id="gamePanel">
@@ -707,8 +762,8 @@
     </div>
 
 
-    <!-- 游戏消息 -->
-    <div class="game-message" id="gameMessage"></div>
+     <!-- 单元格工具提示 -->
+     <div class="cell-tooltip" id="cellTooltip"></div>
 
     <!-- 游戏结束界面 -->
     <div class="game-over-panel" id="gameOverPanel">
@@ -1061,12 +1116,13 @@
             gameState.totalClicks++;
             
             if (type === 'monster') {
-                // 检查战力是否足够
-                const playerPower = calculateTotalPower();
-                if (playerPower < monsterPower) {
-                    showMessage(`战力不足! 需要${monsterPower}战力，当前${playerPower}战力`);
-                    return;
-                }
+                 // 检查战力是否足够
+                 const playerPower = calculateTotalPower();
+                 if (playerPower < monsterPower) {
+                     showMessage(`战力不足! 需要${monsterPower}战力，当前${playerPower}战力`, 'warning');
+                     showCellAnimation(cell, 'flash');
+                     return;
+                 }
                 
                 // 击败普通怪物
                 const exp = Math.floor(Math.random() * 25) + 10;
@@ -1079,14 +1135,16 @@
                 gameState.monstersKilled++;
                 gameState.score += exp + gold;
                 
-                // 有概率掉落装备
-                if (Math.random() < 0.3) { // 30% 掉落概率
-                    const equipment = generateRandomEquipment();
-                    addToInventory(equipment);
-                    showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
-                } else {
-                    showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值`);
-                }
+                 // 有概率掉落装备
+                 if (Math.random() < 0.3) { // 30% 掉落概率
+                     const equipment = generateRandomEquipment();
+                     addToInventory(equipment);
+                     showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`, 'success');
+                 } else {
+                     showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值`, 'success');
+                 }
+                 
+                 showCellAnimation(cell, 'flash');
                 
                 cell.textContent = '💀';
                 cell.className = 'excel-cell';
@@ -1098,12 +1156,13 @@
                 }
                 
             } else if (type === 'boss') {
-                // 检查战力是否足够
-                const playerPower = calculateTotalPower();
-                if (playerPower < monsterPower) {
-                    showMessage(`Boss战力过强! 需要${monsterPower}战力，当前${playerPower}战力`);
-                    return;
-                }
+                 // 检查战力是否足够
+                 const playerPower = calculateTotalPower();
+                 if (playerPower < monsterPower) {
+                     showMessage(`Boss战力过强! 需要${monsterPower}战力，当前${playerPower}战力`, 'error');
+                     showCellAnimation(cell, 'flash');
+                     return;
+                 }
                 
                 // 遭遇Boss - 高风险高回报
                 const success = Math.random() < (0.5 + gameState.level * 0.05); // 基础50%成功率 + 等级加成
@@ -1129,18 +1188,20 @@
                     cell.removeAttribute('data-type');
                     cell.removeAttribute('data-power');
                     
-                    if (gameState.health <= 0) {
-                        showMessage(`击败Boss但力竭而亡! 游戏结束!`);
-                        setTimeout(gameOver, 1500);
-                    } else {
-                        showMessage(`🎉 击败Boss! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
-                    }
-                } else {
-                    // 被Boss击败
-                    showMessage(`💀 被强大的Boss击败! 游戏结束!`);
-                    setTimeout(gameOver, 1500);
-                    return;
-                }
+                     if (gameState.health <= 0) {
+                         showMessage(`击败Boss但力竭而亡! 游戏结束!`, 'error');
+                         setTimeout(gameOver, 1500);
+                     } else {
+                         showMessage(`🎉 击败Boss! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`, 'success');
+                     }
+                 } else {
+                     // 被Boss击败
+                     showMessage(`💀 被强大的Boss击败! 游戏结束!`, 'error');
+                     setTimeout(gameOver, 1500);
+                     return;
+                 }
+                 
+                 showCellAnimation(cell, 'flash');
                 
             } else if (type === 'treasure') {
                 // 开启宝箱
@@ -1154,18 +1215,19 @@
                 gameState.treasuresFound++;
                 gameState.score += exp + gold + healing;
                 
-                // 宝箱有更高概率掉落装备
-                if (Math.random() < 0.6) { // 60% 掉落概率
-                    const equipment = generateRandomEquipment();
-                    addToInventory(equipment);
-                    showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
-                } else {
-                    showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值`);
-                }
-                
-                cell.textContent = '📦';
-                cell.className = 'excel-cell';
-                cell.removeAttribute('data-type');
+                 // 宝箱有更高概率掉落装备
+                 if (Math.random() < 0.6) { // 60% 掉落概率
+                     const equipment = generateRandomEquipment();
+                     addToInventory(equipment);
+                     showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`, 'success');
+                 } else {
+                     showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值`, 'success');
+                 }
+                 
+                 showCellAnimation(cell, 'flash');
+                 cell.textContent = '📦';
+                 cell.className = 'excel-cell';
+                 cell.removeAttribute('data-type');
                 
             } else if (type === 'hero') {
                 // 获得技能/buff
@@ -1176,11 +1238,12 @@
                 gameState.health = Math.min(gameState.maxHealth, gameState.health + healing);
                 gameState.score += exp + healing;
                 
-                cell.textContent = '⭐';
-                cell.className = 'excel-cell';
-                cell.removeAttribute('data-type');
-                
-                showMessage(`获得技能强化! +${exp} 经验, +${healing} 生命值`);
+                 cell.textContent = '⭐';
+                 cell.className = 'excel-cell';
+                 cell.removeAttribute('data-type');
+                 
+                 showMessage(`获得技能强化! +${exp} 经验, +${healing} 生命值`, 'success');
+                 showCellAnimation(cell, 'flash');
                 
             } else {
                 // 普通单元格 - 小量经验
@@ -1281,7 +1344,7 @@
             updateInventoryDisplay();
             updateDisplay();
             
-            showMessage(`装备了 ${equipment.emoji}${equipment.name} (+${equipment.power} 战力)`);
+             showMessage(`装备了 ${equipment.emoji}${equipment.name} (+${equipment.power} 战力)`, 'success');
             
             // 自动保存游戏
             saveGame();
@@ -1362,7 +1425,7 @@
                 gameState.health = Math.min(gameState.maxHealth, gameState.health + 20); // 升级回血
                 gameState.power += 5; // 升级增加基础战力
                 
-                showMessage(`🎉 等级提升! 现在是 ${gameState.level} 级! 生命值和战力增加!`);
+                 showMessage(`🎉 等级提升! 现在是 ${gameState.level} 级! 生命值和战力增加!`, 'success');
                 
                 // 升级时刷新地图
                 setTimeout(() => {
@@ -1410,16 +1473,57 @@
             });
         }
 
-        // 显示消息
-        function showMessage(message) {
-            const messageEl = document.getElementById('gameMessage');
-            messageEl.textContent = message;
-            messageEl.classList.add('show');
-            
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, 2000);
-        }
+         // 显示隐蔽的状态栏消息
+         function showMessage(message, type = 'info') {
+             const statusEl = document.getElementById('statusMessage');
+             if (!statusEl) return;
+             
+             // 清除之前的类
+             statusEl.className = 'excel-status-message';
+             
+             // 根据类型添加样式
+             if (type === 'success') {
+                 statusEl.classList.add('success');
+             } else if (type === 'warning') {
+                 statusEl.classList.add('warning');
+             } else if (type === 'error') {
+                 statusEl.classList.add('error');
+             }
+             
+             // 保持原始游戏消息文本
+             statusEl.textContent = message;
+             statusEl.classList.add('show');
+             
+             // 2秒后自动隐藏
+             setTimeout(() => {
+                 statusEl.classList.remove('show');
+             }, 2000);
+         }
+
+         // 显示单元格动画效果
+         function showCellAnimation(cell, type = 'flash') {
+             if (type === 'flash') {
+                 cell.classList.add('cell-flash');
+                 setTimeout(() => {
+                     cell.classList.remove('cell-flash');
+                 }, 600);
+             }
+         }
+
+         // 显示经验值增长动画
+         function showExpGain(amount, x, y) {
+             const expGain = document.createElement('div');
+             expGain.className = 'exp-gain';
+             expGain.textContent = `+${amount}`;
+             expGain.style.left = x + 'px';
+             expGain.style.top = y + 'px';
+             
+             document.body.appendChild(expGain);
+             
+             setTimeout(() => {
+                 document.body.removeChild(expGain);
+             }, 1500);
+         }
 
         // 更新显示
         function updateDisplay() {
@@ -1527,7 +1631,7 @@
             document.getElementById('formulaInput').value = '';
             document.querySelector('.name-box').value = 'A1';
             
-            showMessage('新游戏开始! 祝你好运!');
+             showMessage('新游戏开始! 祝你好运!', 'success');
             
             // 保存新游戏状态
             saveGame();
