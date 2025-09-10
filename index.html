@@ -161,6 +161,32 @@
             font-size: 11px;
         }
 
+        .save-status {
+            height: 21px;
+            padding: 0 8px;
+            background: #f8f9fa;
+            border: 1px solid #a6a6a6;
+            border-left: none;
+            font-size: 12px;
+            cursor: pointer;
+            min-width: 25px;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .save-status.saving {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .save-status.saved {
+            background: #d4edda;
+            color: #155724;
+        }
+
         /* Excel工作表区域 */
         .excel-worksheet {
             background: #ffffff;
@@ -269,6 +295,21 @@
             cursor: pointer;
         }
 
+        .excel-cell.boss-cell {
+            background: #4c0000;
+            color: #ff6666;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
         /* 状态栏 */
         .excel-statusbar {
             background: #0078d4;
@@ -296,7 +337,7 @@
             position: fixed;
             top: 50px;
             right: 20px;
-            width: 200px;
+            width: 250px;
             background: white;
             border: 1px solid #d1d1d1;
             border-radius: 4px;
@@ -305,6 +346,8 @@
             font-size: 12px;
             z-index: 1000;
             display: none;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .game-panel.show {
@@ -360,6 +403,140 @@
             opacity: 1;
         }
 
+        /* 游戏结束界面 */
+        .game-over-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            max-width: 400px;
+        }
+
+        .game-over-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #c5504b;
+            margin-bottom: 20px;
+        }
+
+        .game-over-stats {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 4px 0;
+            border-bottom: 1px solid #e1dfdd;
+        }
+
+        .restart-btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #106ebe;
+        }
+
+        /* 装备系统样式 */
+        .equipment-section {
+            margin-top: 15px;
+            border-top: 1px solid #e1dfdd;
+            padding-top: 10px;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .equipment-slot {
+            background: #f8f8f8;
+            border: 1px solid #d1d1d1;
+            border-radius: 3px;
+            padding: 5px;
+            text-align: center;
+            font-size: 10px;
+            min-height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .equipment-slot.equipped {
+            background: #e6f3ff;
+            border-color: #0078d4;
+        }
+
+        .equipment-slot .equipment-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .equipment-slot .equipment-power {
+            color: #0078d4;
+            font-size: 9px;
+        }
+
+        .equipment-inventory {
+            margin-top: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .inventory-item {
+            background: #fff2cc;
+            border: 1px solid #d4c5aa;
+            border-radius: 3px;
+            padding: 3px 5px;
+            margin: 2px 0;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-item:hover {
+            background: #ffe599;
+        }
+
+        .inventory-item.better {
+            background: #d5e8d4;
+            border-color: #70ad47;
+        }
+
+        .power-display {
+            font-weight: bold;
+            color: #c5504b;
+        }
+
     </style>
 </head>
 <body>
@@ -408,6 +585,7 @@
         <div class="toolbar-group">
             <button class="toolbar-btn" title="函数" onclick="toggleGamePanel()">fx</button>
             <button class="toolbar-btn" title="图表" onclick="showGameStats()">📊</button>
+            <button class="toolbar-btn" title="保存工作簿" onclick="manualSave()">💾</button>
         </div>
     </div>
 
@@ -415,6 +593,7 @@
     <div class="formula-bar">
         <input type="text" class="name-box" value="A1" readonly>
         <input type="text" class="formula-input" id="formulaInput" placeholder="点击单元格开始游戏..." readonly>
+        <div class="save-status" id="saveStatus" title="存档状态">💾</div>
     </div>
 
     <!-- Excel工作表 -->
@@ -471,6 +650,13 @@
             <div class="progress-fill" id="expBar" style="width: 0%"></div>
         </div>
         <div class="stat-row">
+            <span>生命值:</span>
+            <span id="playerHealth">100/100</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="healthBar" style="width: 100%; background: #ff4444;"></div>
+        </div>
+        <div class="stat-row">
             <span>金币:</span>
             <span id="playerGold">0</span>
         </div>
@@ -482,11 +668,78 @@
             <span>宝箱开启:</span>
             <span id="treasuresFound">0</span>
         </div>
+        <div class="stat-row">
+            <span>战力:</span>
+            <span id="playerPower" class="power-display">100</span>
+        </div>
+        <div class="stat-row">
+            <span>当前分数:</span>
+            <span id="currentScore">0</span>
+        </div>
+        
+        <!-- 装备系统 -->
+        <div class="equipment-section">
+            <div class="panel-title">⚔️ 装备</div>
+            <div class="equipment-grid">
+                <div class="equipment-slot" id="weaponSlot" onclick="showEquipmentOptions('weapon')">
+                    <div class="equipment-name">武器</div>
+                    <div class="equipment-power">+0</div>
+                </div>
+                <div class="equipment-slot" id="armorSlot" onclick="showEquipmentOptions('armor')">
+                    <div class="equipment-name">护甲</div>
+                    <div class="equipment-power">+0</div>
+                </div>
+                <div class="equipment-slot" id="accessorySlot" onclick="showEquipmentOptions('accessory')">
+                    <div class="equipment-name">饰品</div>
+                    <div class="equipment-power">+0</div>
+                </div>
+                <div class="equipment-slot" id="bootSlot" onclick="showEquipmentOptions('boot')">
+                    <div class="equipment-name">靴子</div>
+                    <div class="equipment-power">+0</div>
+                </div>
+            </div>
+            
+            <div class="panel-title" style="margin-top: 10px;">🎒 背包</div>
+            <div class="equipment-inventory" id="equipmentInventory">
+                <div style="text-align: center; color: #888; font-size: 10px;">暂无装备</div>
+            </div>
+        </div>
     </div>
 
 
     <!-- 游戏消息 -->
     <div class="game-message" id="gameMessage"></div>
+
+    <!-- 游戏结束界面 -->
+    <div class="game-over-panel" id="gameOverPanel">
+        <div class="game-over-content">
+            <div class="game-over-title">💀 游戏结束 💀</div>
+            <p>你被强大的Boss击败了！</p>
+            <div class="game-over-stats">
+                <div class="stat-line">
+                    <span>最终等级:</span>
+                    <span id="finalLevel">1</span>
+                </div>
+                <div class="stat-line">
+                    <span>击败怪物:</span>
+                    <span id="finalMonsters">0</span>
+                </div>
+                <div class="stat-line">
+                    <span>开启宝箱:</span>
+                    <span id="finalTreasures">0</span>
+                </div>
+                <div class="stat-line">
+                    <span>收集金币:</span>
+                    <span id="finalGold">0</span>
+                </div>
+                <div class="stat-line">
+                    <span><strong>最终分数:</strong></span>
+                    <span id="finalScore"><strong>0</strong></span>
+                </div>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">重新开始</button>
+        </div>
+    </div>
 
     <script>
         // 游戏状态
@@ -495,17 +748,227 @@
             exp: 0,
             expNeeded: 100,
             gold: 0,
+            health: 100,
+            maxHealth: 100,
+            power: 100, // 基础战力
             monstersKilled: 0,
             treasuresFound: 0,
             totalClicks: 0,
-            errorCount: 0
+            errorCount: 0,
+            score: 0,
+            gameOver: false,
+            equipment: {
+                weapon: null,
+                armor: null,
+                accessory: null,
+                boot: null
+            },
+            inventory: []
         };
+
+        // 本地存储键名
+        const SAVE_KEY = 'excel_rpg_game_save';
+        const WORKSHEET_KEY = 'excel_rpg_worksheet_save';
+
+        // 更新保存状态显示
+        function updateSaveStatus(status) {
+            const saveStatusEl = document.getElementById('saveStatus');
+            if (!saveStatusEl) return;
+            
+            saveStatusEl.className = 'save-status';
+            
+            switch (status) {
+                case 'saving':
+                    saveStatusEl.className += ' saving';
+                    saveStatusEl.textContent = '⏳';
+                    saveStatusEl.title = '正在保存...';
+                    break;
+                case 'saved':
+                    saveStatusEl.className += ' saved';
+                    saveStatusEl.textContent = '✅';
+                    saveStatusEl.title = '已保存';
+                    setTimeout(() => {
+                        saveStatusEl.className = 'save-status';
+                        saveStatusEl.textContent = '💾';
+                        saveStatusEl.title = '存档状态';
+                    }, 2000);
+                    break;
+                case 'error':
+                    saveStatusEl.textContent = '❌';
+                    saveStatusEl.title = '保存失败';
+                    setTimeout(() => {
+                        saveStatusEl.textContent = '💾';
+                        saveStatusEl.title = '存档状态';
+                    }, 3000);
+                    break;
+                default:
+                    saveStatusEl.textContent = '💾';
+                    saveStatusEl.title = '存档状态';
+            }
+        }
+
+        // 保存游戏数据
+        function saveGame() {
+            updateSaveStatus('saving');
+            
+            try {
+                const saveData = {
+                    gameState: gameState,
+                    timestamp: Date.now(),
+                    version: '1.0'
+                };
+                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+                
+                // 保存工作表状态
+                const worksheetCells = [];
+                document.querySelectorAll('.excel-cell').forEach(cell => {
+                    const cellData = {
+                        row: cell.getAttribute('data-row'),
+                        col: cell.getAttribute('data-col'),
+                        type: cell.getAttribute('data-type'),
+                        power: cell.getAttribute('data-power'),
+                        content: cell.textContent,
+                        className: cell.className,
+                        title: cell.title
+                    };
+                    if (cellData.type || cellData.content !== '') {
+                        worksheetCells.push(cellData);
+                    }
+                });
+                
+                localStorage.setItem(WORKSHEET_KEY, JSON.stringify(worksheetCells));
+                updateSaveStatus('saved');
+                return true;
+            } catch (error) {
+                console.error('保存游戏失败:', error);
+                updateSaveStatus('error');
+                return false;
+            }
+        }
+
+        // 加载游戏数据
+        function loadGame() {
+            try {
+                const saveData = localStorage.getItem(SAVE_KEY);
+                if (!saveData) return false;
+                
+                const parsed = JSON.parse(saveData);
+                if (parsed.gameState) {
+                    // 合并保存的状态到当前状态
+                    gameState = { ...gameState, ...parsed.gameState };
+                    
+                    // 确保新字段存在
+                    if (!gameState.equipment) {
+                        gameState.equipment = { weapon: null, armor: null, accessory: null, boot: null };
+                    }
+                    if (!gameState.inventory) {
+                        gameState.inventory = [];
+                    }
+                    if (!gameState.power) {
+                        gameState.power = 100;
+                    }
+                    
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('加载游戏失败:', error);
+                return false;
+            }
+        }
+
+        // 加载工作表数据
+        function loadWorksheet() {
+            try {
+                const worksheetData = localStorage.getItem(WORKSHEET_KEY);
+                if (!worksheetData) return false;
+                
+                const cellsData = JSON.parse(worksheetData);
+                
+                // 等待工作表创建完成后再应用数据
+                setTimeout(() => {
+                    cellsData.forEach(cellData => {
+                        const cell = document.querySelector(`[data-row="${cellData.row}"][data-col="${cellData.col}"]`);
+                        if (cell) {
+                            cell.className = cellData.className || 'excel-cell';
+                            cell.textContent = cellData.content || '';
+                            if (cellData.type) cell.setAttribute('data-type', cellData.type);
+                            if (cellData.power) cell.setAttribute('data-power', cellData.power);
+                            if (cellData.title) cell.title = cellData.title;
+                        }
+                    });
+                }, 100);
+                
+                return true;
+            } catch (error) {
+                console.error('加载工作表失败:', error);
+                return false;
+            }
+        }
+
+        // 清除存档
+        function clearSave() {
+            try {
+                localStorage.removeItem(SAVE_KEY);
+                localStorage.removeItem(WORKSHEET_KEY);
+                showMessage('存档已清除');
+                return true;
+            } catch (error) {
+                console.error('清除存档失败:', error);
+                return false;
+            }
+        }
 
         // 游戏数据
         const gameData = {
             monsters: ['👹', '🐉', '👾', '🦖', '🕷️', '🐺', '🦇', '🐍'],
+            bosses: ['💀', '🔥', '⚡', '🌪️', '☠️', '👑', '🗡️', '⚔️'],
             treasures: ['💎', '👑', '💰', '🏆', '💍', '🎁', '⚱️', '📿'],
-            heroes: ['🧙', '⚔️', '🛡️', '🏹', '⚡', '🔥', '❄️', '✨']
+            heroes: ['🧙', '⚔️', '🛡️', '🏹', '⚡', '🔥', '❄️', '✨'],
+            
+            // 装备数据
+            equipmentTypes: {
+                weapon: {
+                    name: '武器',
+                    items: [
+                        { name: '铁剑', power: 10, emoji: '⚔️', rarity: 'common' },
+                        { name: '钢剑', power: 20, emoji: '🗡️', rarity: 'uncommon' },
+                        { name: '魔法剑', power: 35, emoji: '⚡', rarity: 'rare' },
+                        { name: '龙牙剑', power: 50, emoji: '🐲', rarity: 'epic' },
+                        { name: '神圣之剑', power: 80, emoji: '✨', rarity: 'legendary' }
+                    ]
+                },
+                armor: {
+                    name: '护甲',
+                    items: [
+                        { name: '布甲', power: 8, emoji: '👕', rarity: 'common' },
+                        { name: '皮甲', power: 15, emoji: '🦺', rarity: 'uncommon' },
+                        { name: '锁甲', power: 28, emoji: '🛡️', rarity: 'rare' },
+                        { name: '板甲', power: 45, emoji: '⚙️', rarity: 'epic' },
+                        { name: '龙鳞甲', power: 70, emoji: '🐉', rarity: 'legendary' }
+                    ]
+                },
+                accessory: {
+                    name: '饰品',
+                    items: [
+                        { name: '铜戒指', power: 5, emoji: '💍', rarity: 'common' },
+                        { name: '银项链', power: 12, emoji: '📿', rarity: 'uncommon' },
+                        { name: '魔法护符', power: 22, emoji: '🔮', rarity: 'rare' },
+                        { name: '王者之冠', power: 40, emoji: '👑', rarity: 'epic' },
+                        { name: '神之眼', power: 65, emoji: '👁️', rarity: 'legendary' }
+                    ]
+                },
+                boot: {
+                    name: '靴子',
+                    items: [
+                        { name: '草鞋', power: 3, emoji: '👟', rarity: 'common' },
+                        { name: '皮靴', power: 8, emoji: '👢', rarity: 'uncommon' },
+                        { name: '疾风靴', power: 18, emoji: '👠', rarity: 'rare' },
+                        { name: '飞行靴', power: 30, emoji: '🦶', rarity: 'epic' },
+                        { name: '神速之靴', power: 50, emoji: '⚡', rarity: 'legendary' }
+                    ]
+                }
+            }
         };
 
         // 创建工作表
@@ -531,13 +994,24 @@
                     cell.setAttribute('data-col', col);
                     
                     // 随机添加游戏元素
-                    if (Math.random() < 0.02) { // 2% 概率
+                    if (Math.random() < 0.025) { // 2.5% 概率
                         const type = Math.random();
-                        if (type < 0.4) {
-                            // 怪物
+                        if (type < 0.35) {
+                            // 普通怪物
+                            const monsterPower = Math.floor(Math.random() * 50) + gameState.level * 10 + 50;
                             cell.className += ' monster-cell';
                             cell.textContent = gameData.monsters[Math.floor(Math.random() * gameData.monsters.length)];
                             cell.setAttribute('data-type', 'monster');
+                            cell.setAttribute('data-power', monsterPower);
+                            cell.title = `战力: ${monsterPower}`;
+                        } else if (type < 0.4) {
+                            // Boss怪物 (危险!)
+                            const bossPower = Math.floor(Math.random() * 100) + gameState.level * 25 + 100;
+                            cell.className += ' boss-cell';
+                            cell.textContent = gameData.bosses[Math.floor(Math.random() * gameData.bosses.length)];
+                            cell.setAttribute('data-type', 'boss');
+                            cell.setAttribute('data-power', bossPower);
+                            cell.title = `Boss战力: ${bossPower}`;
                         } else if (type < 0.7) {
                             // 宝箱
                             cell.className += ' treasure-cell';
@@ -572,8 +1046,11 @@
 
         // 处理单元格点击
         function handleCellClick(event) {
+            if (gameState.gameOver) return;
+            
             const cell = event.target;
             const type = cell.getAttribute('data-type');
+            const monsterPower = parseInt(cell.getAttribute('data-power')) || 0;
             const row = cell.getAttribute('data-row');
             const col = String.fromCharCode(65 + parseInt(cell.getAttribute('data-col')));
             
@@ -584,56 +1061,290 @@
             gameState.totalClicks++;
             
             if (type === 'monster') {
-                // 击败怪物
+                // 检查战力是否足够
+                const playerPower = calculateTotalPower();
+                if (playerPower < monsterPower) {
+                    showMessage(`战力不足! 需要${monsterPower}战力，当前${playerPower}战力`);
+                    return;
+                }
+                
+                // 击败普通怪物
                 const exp = Math.floor(Math.random() * 25) + 10;
                 const gold = Math.floor(Math.random() * 15) + 5;
+                const damage = Math.floor(Math.random() * 8) + 2; // 2-10 伤害
                 
+                gameState.health = Math.max(0, gameState.health - damage);
                 addExp(exp);
                 gameState.gold += gold;
                 gameState.monstersKilled++;
+                gameState.score += exp + gold;
+                
+                // 有概率掉落装备
+                if (Math.random() < 0.3) { // 30% 掉落概率
+                    const equipment = generateRandomEquipment();
+                    addToInventory(equipment);
+                    showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
+                } else {
+                    showMessage(`击败怪物! +${exp} 经验, +${gold} 金币, -${damage} 生命值`);
+                }
                 
                 cell.textContent = '💀';
                 cell.className = 'excel-cell';
                 cell.removeAttribute('data-type');
+                cell.removeAttribute('data-power');
                 
-                showMessage(`击败怪物! +${exp} 经验, +${gold} 金币`);
+                if (gameState.health <= 0) {
+                    setTimeout(gameOver, 1500);
+                }
+                
+            } else if (type === 'boss') {
+                // 检查战力是否足够
+                const playerPower = calculateTotalPower();
+                if (playerPower < monsterPower) {
+                    showMessage(`Boss战力过强! 需要${monsterPower}战力，当前${playerPower}战力`);
+                    return;
+                }
+                
+                // 遭遇Boss - 高风险高回报
+                const success = Math.random() < (0.5 + gameState.level * 0.05); // 基础50%成功率 + 等级加成
+                
+                if (success) {
+                    // 成功击败Boss
+                    const exp = Math.floor(Math.random() * 80) + 50;
+                    const gold = Math.floor(Math.random() * 60) + 40;
+                    const damage = Math.floor(Math.random() * 15) + 10; // 10-25 伤害
+                    
+                    gameState.health = Math.max(0, gameState.health - damage);
+                    addExp(exp);
+                    gameState.gold += gold;
+                    gameState.monstersKilled++;
+                    gameState.score += (exp + gold) * 2; // Boss双倍分数
+                    
+                    // Boss必定掉落高级装备
+                    const equipment = generateRandomEquipment(true);
+                    addToInventory(equipment);
+                    
+                    cell.textContent = '👑';
+                    cell.className = 'excel-cell';
+                    cell.removeAttribute('data-type');
+                    cell.removeAttribute('data-power');
+                    
+                    if (gameState.health <= 0) {
+                        showMessage(`击败Boss但力竭而亡! 游戏结束!`);
+                        setTimeout(gameOver, 1500);
+                    } else {
+                        showMessage(`🎉 击败Boss! +${exp} 经验, +${gold} 金币, -${damage} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
+                    }
+                } else {
+                    // 被Boss击败
+                    showMessage(`💀 被强大的Boss击败! 游戏结束!`);
+                    setTimeout(gameOver, 1500);
+                    return;
+                }
                 
             } else if (type === 'treasure') {
                 // 开启宝箱
                 const exp = Math.floor(Math.random() * 40) + 20;
                 const gold = Math.floor(Math.random() * 30) + 15;
+                const healing = Math.floor(Math.random() * 15) + 10; // 10-25 治疗
                 
                 addExp(exp);
                 gameState.gold += gold;
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + healing);
                 gameState.treasuresFound++;
+                gameState.score += exp + gold + healing;
+                
+                // 宝箱有更高概率掉落装备
+                if (Math.random() < 0.6) { // 60% 掉落概率
+                    const equipment = generateRandomEquipment();
+                    addToInventory(equipment);
+                    showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值, 获得装备: ${equipment.emoji}${equipment.name}`);
+                } else {
+                    showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币, +${healing} 生命值`);
+                }
                 
                 cell.textContent = '📦';
                 cell.className = 'excel-cell';
                 cell.removeAttribute('data-type');
                 
-                showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币`);
-                
             } else if (type === 'hero') {
                 // 获得技能/buff
                 const exp = Math.floor(Math.random() * 15) + 5;
+                const healing = Math.floor(Math.random() * 10) + 5; // 5-15 治疗
+                
                 addExp(exp);
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + healing);
+                gameState.score += exp + healing;
                 
                 cell.textContent = '⭐';
                 cell.className = 'excel-cell';
                 cell.removeAttribute('data-type');
                 
-                showMessage(`获得技能强化! +${exp} 经验`);
+                showMessage(`获得技能强化! +${exp} 经验, +${healing} 生命值`);
                 
             } else {
                 // 普通单元格 - 小量经验
                 if (Math.random() < 0.1) { // 10% 概率获得经验
                     const exp = Math.floor(Math.random() * 3) + 1;
                     addExp(exp);
+                    gameState.score += exp;
                     showMessage(`数据分析完成 +${exp} 经验`);
                 }
             }
             
             updateDisplay();
+            
+            // 自动保存游戏
+            saveGame();
+        }
+
+        // 计算总战力
+        function calculateTotalPower() {
+            let totalPower = gameState.power + (gameState.level - 1) * 20; // 基础战力 + 等级加成
+            
+            // 装备加成
+            Object.values(gameState.equipment).forEach(equipment => {
+                if (equipment) {
+                    totalPower += equipment.power;
+                }
+            });
+            
+            return totalPower;
+        }
+
+        // 生成随机装备
+        function generateRandomEquipment(isBoss = false) {
+            const types = Object.keys(gameData.equipmentTypes);
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            const equipmentList = gameData.equipmentTypes[randomType].items;
+            
+            let equipment;
+            if (isBoss) {
+                // Boss掉落高级装备
+                const highLevelEquipment = equipmentList.filter(item => 
+                    item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary'
+                );
+                equipment = highLevelEquipment[Math.floor(Math.random() * highLevelEquipment.length)];
+            } else {
+                // 普通掉落，根据等级调整掉落概率
+                const rarityWeights = {
+                    common: Math.max(60 - gameState.level * 5, 10),
+                    uncommon: Math.min(25 + gameState.level * 2, 40),
+                    rare: Math.min(10 + gameState.level * 2, 30),
+                    epic: Math.min(4 + gameState.level, 15),
+                    legendary: Math.min(1 + Math.floor(gameState.level / 5), 5)
+                };
+                
+                const totalWeight = Object.values(rarityWeights).reduce((sum, weight) => sum + weight, 0);
+                let random = Math.random() * totalWeight;
+                
+                for (const [rarity, weight] of Object.entries(rarityWeights)) {
+                    random -= weight;
+                    if (random <= 0) {
+                        const rarityEquipment = equipmentList.filter(item => item.rarity === rarity);
+                        equipment = rarityEquipment[Math.floor(Math.random() * rarityEquipment.length)];
+                        break;
+                    }
+                }
+            }
+            
+            return {
+                ...equipment,
+                type: randomType,
+                id: Date.now() + Math.random()
+            };
+        }
+
+        // 添加到背包
+        function addToInventory(equipment) {
+            gameState.inventory.push(equipment);
+            updateInventoryDisplay();
+        }
+
+        // 装备物品
+        function equipItem(equipment) {
+            // 卸下当前装备
+            if (gameState.equipment[equipment.type]) {
+                gameState.inventory.push(gameState.equipment[equipment.type]);
+            }
+            
+            // 装备新物品
+            gameState.equipment[equipment.type] = equipment;
+            
+            // 从背包移除
+            const index = gameState.inventory.findIndex(item => item.id === equipment.id);
+            if (index !== -1) {
+                gameState.inventory.splice(index, 1);
+            }
+            
+            updateEquipmentDisplay();
+            updateInventoryDisplay();
+            updateDisplay();
+            
+            showMessage(`装备了 ${equipment.emoji}${equipment.name} (+${equipment.power} 战力)`);
+            
+            // 自动保存游戏
+            saveGame();
+        }
+
+        // 更新装备显示
+        function updateEquipmentDisplay() {
+            Object.keys(gameState.equipment).forEach(type => {
+                const slot = document.getElementById(type + 'Slot');
+                const equipment = gameState.equipment[type];
+                
+                if (equipment) {
+                    slot.className = 'equipment-slot equipped';
+                    slot.innerHTML = `
+                        <div class="equipment-name">${equipment.emoji}${equipment.name}</div>
+                        <div class="equipment-power">+${equipment.power}</div>
+                    `;
+                } else {
+                    slot.className = 'equipment-slot';
+                    slot.innerHTML = `
+                        <div class="equipment-name">${gameData.equipmentTypes[type].name}</div>
+                        <div class="equipment-power">+0</div>
+                    `;
+                }
+            });
+        }
+
+        // 更新背包显示
+        function updateInventoryDisplay() {
+            const inventoryEl = document.getElementById('equipmentInventory');
+            
+            if (gameState.inventory.length === 0) {
+                inventoryEl.innerHTML = '<div style="text-align: center; color: #888; font-size: 10px;">暂无装备</div>';
+                return;
+            }
+            
+            inventoryEl.innerHTML = gameState.inventory.map(equipment => {
+                const currentEquipment = gameState.equipment[equipment.type];
+                const isBetter = !currentEquipment || equipment.power > currentEquipment.power;
+                
+                return `
+                    <div class="inventory-item ${isBetter ? 'better' : ''}" onclick="equipItem(${JSON.stringify(equipment).replace(/"/g, '&quot;')})">
+                        <span>${equipment.emoji}${equipment.name}</span>
+                        <span>+${equipment.power}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 显示装备选项（暂时保留接口）
+        function showEquipmentOptions(type) {
+            // 可以在这里实现更复杂的装备管理界面
+            showMessage(`点击背包中的装备来替换${gameData.equipmentTypes[type].name}`);
+        }
+
+        // 手动保存游戏
+        function manualSave() {
+            const success = saveGame();
+            if (success) {
+                showMessage('💾 工作簿已保存');
+            } else {
+                showMessage('❌ 保存失败，请重试');
+            }
         }
 
         // 增加经验值
@@ -646,11 +1357,17 @@
                 gameState.level++;
                 gameState.expNeeded = Math.floor(gameState.expNeeded * 1.5);
                 
-                showMessage(`🎉 等级提升! 现在是 ${gameState.level} 级!`);
+                // 升级时增加最大生命值和基础战力
+                gameState.maxHealth += 10;
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + 20); // 升级回血
+                gameState.power += 5; // 升级增加基础战力
+                
+                showMessage(`🎉 等级提升! 现在是 ${gameState.level} 级! 生命值和战力增加!`);
                 
                 // 升级时刷新地图
                 setTimeout(() => {
                     refreshGameElements();
+                    saveGame(); // 升级后保存
                 }, 1000);
             }
         }
@@ -664,10 +1381,20 @@
                 if (!cell.getAttribute('data-type') && addedElements < 15) {
                     if (Math.random() < 0.05) { // 5% 概率添加新元素
                         const type = Math.random();
-                        if (type < 0.4) {
+                        if (type < 0.35) {
+                            const monsterPower = Math.floor(Math.random() * 50) + gameState.level * 10 + 50;
                             cell.className = 'excel-cell monster-cell';
                             cell.textContent = gameData.monsters[Math.floor(Math.random() * gameData.monsters.length)];
                             cell.setAttribute('data-type', 'monster');
+                            cell.setAttribute('data-power', monsterPower);
+                            cell.title = `战力: ${monsterPower}`;
+                        } else if (type < 0.4 + (gameState.level * 0.01)) { // Boss概率随等级增加
+                            const bossPower = Math.floor(Math.random() * 100) + gameState.level * 25 + 100;
+                            cell.className = 'excel-cell boss-cell';
+                            cell.textContent = gameData.bosses[Math.floor(Math.random() * gameData.bosses.length)];
+                            cell.setAttribute('data-type', 'boss');
+                            cell.setAttribute('data-power', bossPower);
+                            cell.title = `Boss战力: ${bossPower}`;
                         } else if (type < 0.7) {
                             cell.className = 'excel-cell treasure-cell';
                             cell.textContent = gameData.treasures[Math.floor(Math.random() * gameData.treasures.length)];
@@ -696,20 +1423,38 @@
 
         // 更新显示
         function updateDisplay() {
+            // 计算当前总战力
+            const totalPower = calculateTotalPower();
+            
             // 更新状态栏
             document.getElementById('gameStatus').textContent = 
-                `经验值: ${gameState.exp}/${gameState.expNeeded} | 等级: ${gameState.level}`;
+                `生命值: ${gameState.health}/${gameState.maxHealth} | 战力: ${totalPower} | 经验值: ${gameState.exp}/${gameState.expNeeded} | 等级: ${gameState.level}`;
             
             // 更新游戏面板
             document.getElementById('playerLevel').textContent = gameState.level;
             document.getElementById('playerExp').textContent = `${gameState.exp}/${gameState.expNeeded}`;
+            document.getElementById('playerHealth').textContent = `${gameState.health}/${gameState.maxHealth}`;
+            document.getElementById('playerPower').textContent = totalPower;
             document.getElementById('playerGold').textContent = gameState.gold;
             document.getElementById('monstersKilled').textContent = gameState.monstersKilled;
             document.getElementById('treasuresFound').textContent = gameState.treasuresFound;
+            document.getElementById('currentScore').textContent = gameState.score;
             
             const expPercent = (gameState.exp / gameState.expNeeded) * 100;
             document.getElementById('expBar').style.width = `${expPercent}%`;
             
+            const healthPercent = (gameState.health / gameState.maxHealth) * 100;
+            document.getElementById('healthBar').style.width = `${healthPercent}%`;
+            
+            // 根据生命值改变颜色
+            const healthBar = document.getElementById('healthBar');
+            if (healthPercent > 60) {
+                healthBar.style.background = '#4CAF50'; // 绿色
+            } else if (healthPercent > 30) {
+                healthBar.style.background = '#FF9800'; // 橙色
+            } else {
+                healthBar.style.background = '#F44336'; // 红色
+            }
         }
 
         // 切换游戏面板
@@ -725,23 +1470,113 @@
             showMessage('数据透视表已更新');
         }
 
+        // 游戏结束
+        function gameOver() {
+            gameState.gameOver = true;
+            
+            // 显示最终统计
+            document.getElementById('finalLevel').textContent = gameState.level;
+            document.getElementById('finalMonsters').textContent = gameState.monstersKilled;
+            document.getElementById('finalTreasures').textContent = gameState.treasuresFound;
+            document.getElementById('finalGold').textContent = gameState.gold;
+            document.getElementById('finalScore').textContent = gameState.score;
+            
+            // 显示游戏结束界面
+            document.getElementById('gameOverPanel').style.display = 'flex';
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            // 清除存档
+            clearSave();
+            
+            // 重置游戏状态
+            gameState = {
+                level: 1,
+                exp: 0,
+                expNeeded: 100,
+                gold: 0,
+                health: 100,
+                maxHealth: 100,
+                power: 100, // 基础战力
+                monstersKilled: 0,
+                treasuresFound: 0,
+                totalClicks: 0,
+                errorCount: 0,
+                score: 0,
+                gameOver: false,
+                equipment: {
+                    weapon: null,
+                    armor: null,
+                    accessory: null,
+                    boot: null
+                },
+                inventory: []
+            };
+            
+            // 隐藏游戏结束界面
+            document.getElementById('gameOverPanel').style.display = 'none';
+            
+            // 重新创建工作表
+            createWorksheet();
+            updateDisplay();
+            updateEquipmentDisplay();
+            updateInventoryDisplay();
+            
+            // 重置公式栏
+            document.getElementById('formulaInput').value = '';
+            document.querySelector('.name-box').value = 'A1';
+            
+            showMessage('新游戏开始! 祝你好运!');
+            
+            // 保存新游戏状态
+            saveGame();
+        }
+
         // 自动刷新游戏元素
         setInterval(() => {
-            if (Math.random() < 0.3) { // 30% 概率刷新
+            if (!gameState.gameOver && Math.random() < 0.3) { // 30% 概率刷新
                 refreshGameElements();
+                saveGame(); // 刷新后保存
             }
         }, 30000); // 每30秒
 
+        // 初始化游戏
+        function initializeGame() {
+            // 尝试加载存档
+            const hasLoadedGame = loadGame();
+            
+            if (hasLoadedGame) {
+                showMessage('已加载存档数据');
+                // 先创建工作表
+                createWorksheet();
+                // 然后加载工作表数据
+                loadWorksheet();
+            } else {
+                showMessage('开始新游戏');
+                createWorksheet();
+            }
+            
+            updateDisplay();
+            updateEquipmentDisplay();
+            updateInventoryDisplay();
+        }
+
         // 初始化
-        createWorksheet();
-        updateDisplay();
+        initializeGame();
         
         // 自动保存游戏状态（伪装成Excel自动保存）
         setInterval(() => {
-            if (Math.random() < 0.1) {
+            if (!gameState.gameOver && Math.random() < 0.1) {
+                saveGame();
                 showMessage('工作簿已自动保存');
             }
-        }, 45000);
+        }, 45000); // 每45秒
+
+        // 页面关闭前保存
+        window.addEventListener('beforeunload', function(e) {
+            saveGame();
+        });
     </script>
 </body>
 </html>
