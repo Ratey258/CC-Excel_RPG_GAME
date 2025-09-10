@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Excel - 工作簿1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f3f2f1;
+            overflow: hidden;
+        }
+
+        /* Excel标题栏 */
+        .excel-titlebar {
+            background: #2b579a;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .excel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .excel-logo {
+            width: 20px;
+            height: 20px;
+            background: #107c41;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 1px;
+        }
+
+        .control-btn {
+            width: 45px;
+            height: 29px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Excel菜单栏 */
+        .excel-menubar {
+            background: #ffffff;
+            border-bottom: 1px solid #d1d1d1;
+            display: flex;
+            align-items: center;
+            height: 48px;
+        }
+
+        .menu-tabs {
+            display: flex;
+            margin-left: 15px;
+        }
+
+        .menu-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #323130;
+            font-size: 14px;
+            border-bottom: 3px solid transparent;
+        }
+
+        .menu-tab.active {
+            border-bottom-color: #0078d4;
+            color: #0078d4;
+        }
+
+        .menu-tab:hover {
+            background: #f3f2f1;
+        }
+
+        /* Excel工具栏 */
+        .excel-toolbar {
+            background: #ffffff;
+            border-bottom: 1px solid #d1d1d1;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 92px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding-right: 15px;
+            border-right: 1px solid #d1d1d1;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .toolbar-btn:hover {
+            background: #f3f2f1;
+        }
+
+        /* 公式栏 */
+        .formula-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #d1d1d1;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .name-box {
+            width: 80px;
+            height: 21px;
+            border: 1px solid #a6a6a6;
+            padding: 0 5px;
+            font-size: 11px;
+        }
+
+        .formula-input {
+            flex: 1;
+            height: 21px;
+            border: 1px solid #a6a6a6;
+            margin-left: 5px;
+            padding: 0 5px;
+            font-size: 11px;
+        }
+
+        /* Excel工作表区域 */
+        .excel-worksheet {
+            background: #ffffff;
+            height: calc(100vh - 225px);
+            overflow: auto;
+            position: relative;
+        }
+
+        /* 行列标题 */
+        .column-headers {
+            position: sticky;
+            top: 0;
+            background: #f8f8f8;
+            border-bottom: 1px solid #d4d4d4;
+            display: flex;
+            height: 20px;
+            z-index: 10;
+        }
+
+        .corner-cell {
+            width: 42px;
+            min-width: 42px;
+            background: #f8f8f8;
+            border-right: 1px solid #d4d4d4;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .column-header {
+            width: 80px;
+            min-width: 80px;
+            text-align: center;
+            font-size: 11px;
+            color: #323130;
+            line-height: 20px;
+            border-right: 1px solid #d4d4d4;
+            background: #f8f8f8;
+            cursor: pointer;
+        }
+
+        /* 工作表内容 */
+        .worksheet-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .worksheet-row {
+            display: flex;
+            height: 20px;
+        }
+
+        .row-header {
+            width: 42px;
+            min-width: 42px;
+            text-align: center;
+            font-size: 11px;
+            color: #323130;
+            background: #f8f8f8;
+            border-right: 1px solid #d4d4d4;
+            border-bottom: 1px solid #e8e8e8;
+            line-height: 20px;
+            cursor: pointer;
+        }
+
+        .excel-cell {
+            width: 80px;
+            min-width: 80px;
+            height: 20px;
+            border-right: 1px solid #e8e8e8;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 2px 6px;
+            font-size: 11px;
+            position: relative;
+            cursor: cell;
+        }
+
+        .excel-cell:hover {
+            background: #f3f2f1;
+        }
+
+        .excel-cell.selected {
+            background: #0078d4;
+            color: white;
+        }
+
+        .excel-cell.game-cell {
+            background: #fff2cc;
+            color: #9c5700;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .excel-cell.monster-cell {
+            background: #ffcccc;
+            color: #c5504b;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .excel-cell.treasure-cell {
+            background: #e1dfdd;
+            color: #7719aa;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* 状态栏 */
+        .excel-statusbar {
+            background: #0078d4;
+            color: white;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 11px;
+            justify-content: space-between;
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 游戏面板 */
+        .game-panel {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            width: 200px;
+            background: white;
+            border: 1px solid #d1d1d1;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .game-panel.show {
+            display: block;
+        }
+
+        .panel-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #323130;
+            border-bottom: 1px solid #e1dfdd;
+            padding-bottom: 5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e1dfdd;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #0078d4;
+            transition: width 0.3s;
+        }
+
+        /* 隐藏的游戏消息 */
+        .game-message {
+            position: fixed;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323130;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .game-message.show {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Excel标题栏 -->
+    <div class="excel-titlebar">
+        <div class="excel-title">
+            <div class="excel-logo">X</div>
+            <span>工作簿1 - Excel</span>
+        </div>
+        <div class="window-controls">
+            <button class="control-btn">−</button>
+            <button class="control-btn">□</button>
+            <button class="control-btn">×</button>
+        </div>
+    </div>
+
+    <!-- Excel菜单栏 -->
+    <div class="excel-menubar">
+        <div class="menu-tabs">
+            <div class="menu-tab">文件</div>
+            <div class="menu-tab active">开始</div>
+            <div class="menu-tab">插入</div>
+            <div class="menu-tab">页面布局</div>
+            <div class="menu-tab">公式</div>
+            <div class="menu-tab">数据</div>
+            <div class="menu-tab">审阅</div>
+            <div class="menu-tab">视图</div>
+        </div>
+    </div>
+
+    <!-- Excel工具栏 -->
+    <div class="excel-toolbar">
+        <div class="toolbar-group">
+            <button class="toolbar-btn" title="粘贴">📋</button>
+        </div>
+        <div class="toolbar-group">
+            <button class="toolbar-btn" title="剪切">✂</button>
+            <button class="toolbar-btn" title="复制">📄</button>
+            <button class="toolbar-btn" title="格式刷">🖌</button>
+        </div>
+        <div class="toolbar-group">
+            <button class="toolbar-btn" title="加粗">B</button>
+            <button class="toolbar-btn" title="斜体">I</button>
+            <button class="toolbar-btn" title="下划线">U</button>
+        </div>
+        <div class="toolbar-group">
+            <button class="toolbar-btn" title="函数" onclick="toggleGamePanel()">fx</button>
+            <button class="toolbar-btn" title="图表" onclick="showGameStats()">📊</button>
+        </div>
+    </div>
+
+    <!-- 公式栏 -->
+    <div class="formula-bar">
+        <input type="text" class="name-box" value="A1" readonly>
+        <input type="text" class="formula-input" id="formulaInput" placeholder="点击单元格开始游戏..." readonly>
+    </div>
+
+    <!-- Excel工作表 -->
+    <div class="excel-worksheet">
+        <div class="column-headers">
+            <div class="corner-cell"></div>
+            <div class="column-header">A</div>
+            <div class="column-header">B</div>
+            <div class="column-header">C</div>
+            <div class="column-header">D</div>
+            <div class="column-header">E</div>
+            <div class="column-header">F</div>
+            <div class="column-header">G</div>
+            <div class="column-header">H</div>
+            <div class="column-header">I</div>
+            <div class="column-header">J</div>
+            <div class="column-header">K</div>
+            <div class="column-header">L</div>
+            <div class="column-header">M</div>
+            <div class="column-header">N</div>
+            <div class="column-header">O</div>
+            <div class="column-header">P</div>
+        </div>
+        
+        <div class="worksheet-content" id="worksheetContent">
+            <!-- 工作表行将通过JavaScript生成 -->
+        </div>
+    </div>
+
+    <!-- Excel状态栏 -->
+    <div class="excel-statusbar">
+        <div class="status-left">
+            <span>就绪</span>
+            <span id="gameStatus">经验值: 0 | 等级: 1</span>
+        </div>
+        <div class="status-right">
+            <span>100%</span>
+            <span>第 1 页，共 1 页</span>
+        </div>
+    </div>
+
+    <!-- 隐藏的游戏面板 -->
+    <div class="game-panel" id="gamePanel">
+        <div class="panel-title">📊 数据透视表</div>
+        <div class="stat-row">
+            <span>等级:</span>
+            <span id="playerLevel">1</span>
+        </div>
+        <div class="stat-row">
+            <span>经验:</span>
+            <span id="playerExp">0/100</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="expBar" style="width: 0%"></div>
+        </div>
+        <div class="stat-row">
+            <span>金币:</span>
+            <span id="playerGold">0</span>
+        </div>
+        <div class="stat-row">
+            <span>怪物击败:</span>
+            <span id="monstersKilled">0</span>
+        </div>
+        <div class="stat-row">
+            <span>宝箱开启:</span>
+            <span id="treasuresFound">0</span>
+        </div>
+    </div>
+
+
+    <!-- 游戏消息 -->
+    <div class="game-message" id="gameMessage"></div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            level: 1,
+            exp: 0,
+            expNeeded: 100,
+            gold: 0,
+            monstersKilled: 0,
+            treasuresFound: 0,
+            totalClicks: 0,
+            errorCount: 0
+        };
+
+        // 游戏数据
+        const gameData = {
+            monsters: ['👹', '🐉', '👾', '🦖', '🕷️', '🐺', '🦇', '🐍'],
+            treasures: ['💎', '👑', '💰', '🏆', '💍', '🎁', '⚱️', '📿'],
+            heroes: ['🧙', '⚔️', '🛡️', '🏹', '⚡', '🔥', '❄️', '✨']
+        };
+
+        // 创建工作表
+        function createWorksheet() {
+            const worksheetContent = document.getElementById('worksheetContent');
+            worksheetContent.innerHTML = '';
+
+            for (let row = 1; row <= 50; row++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'worksheet-row';
+                
+                // 行标题
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'row-header';
+                rowHeader.textContent = row;
+                rowDiv.appendChild(rowHeader);
+
+                // 单元格
+                for (let col = 0; col < 16; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'excel-cell';
+                    cell.setAttribute('data-row', row);
+                    cell.setAttribute('data-col', col);
+                    
+                    // 随机添加游戏元素
+                    if (Math.random() < 0.02) { // 2% 概率
+                        const type = Math.random();
+                        if (type < 0.4) {
+                            // 怪物
+                            cell.className += ' monster-cell';
+                            cell.textContent = gameData.monsters[Math.floor(Math.random() * gameData.monsters.length)];
+                            cell.setAttribute('data-type', 'monster');
+                        } else if (type < 0.7) {
+                            // 宝箱
+                            cell.className += ' treasure-cell';
+                            cell.textContent = gameData.treasures[Math.floor(Math.random() * gameData.treasures.length)];
+                            cell.setAttribute('data-type', 'treasure');
+                        } else {
+                            // 英雄/技能
+                            cell.className += ' game-cell';
+                            cell.textContent = gameData.heroes[Math.floor(Math.random() * gameData.heroes.length)];
+                            cell.setAttribute('data-type', 'hero');
+                        }
+                    } else {
+                        // 普通数据
+                        const dataTypes = [
+                            Math.floor(Math.random() * 1000),
+                            (Math.random() * 100).toFixed(2),
+                            '',
+                            ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)],
+                            Math.floor(Math.random() * 10000),
+                            ''
+                        ];
+                        cell.textContent = dataTypes[Math.floor(Math.random() * dataTypes.length)];
+                    }
+                    
+                    cell.addEventListener('click', handleCellClick);
+                    rowDiv.appendChild(cell);
+                }
+                
+                worksheetContent.appendChild(rowDiv);
+            }
+        }
+
+        // 处理单元格点击
+        function handleCellClick(event) {
+            const cell = event.target;
+            const type = cell.getAttribute('data-type');
+            const row = cell.getAttribute('data-row');
+            const col = String.fromCharCode(65 + parseInt(cell.getAttribute('data-col')));
+            
+            // 更新公式栏
+            document.getElementById('formulaInput').value = `=${col}${row}`;
+            document.querySelector('.name-box').value = `${col}${row}`;
+
+            gameState.totalClicks++;
+            
+            if (type === 'monster') {
+                // 击败怪物
+                const exp = Math.floor(Math.random() * 25) + 10;
+                const gold = Math.floor(Math.random() * 15) + 5;
+                
+                addExp(exp);
+                gameState.gold += gold;
+                gameState.monstersKilled++;
+                
+                cell.textContent = '💀';
+                cell.className = 'excel-cell';
+                cell.removeAttribute('data-type');
+                
+                showMessage(`击败怪物! +${exp} 经验, +${gold} 金币`);
+                
+            } else if (type === 'treasure') {
+                // 开启宝箱
+                const exp = Math.floor(Math.random() * 40) + 20;
+                const gold = Math.floor(Math.random() * 30) + 15;
+                
+                addExp(exp);
+                gameState.gold += gold;
+                gameState.treasuresFound++;
+                
+                cell.textContent = '📦';
+                cell.className = 'excel-cell';
+                cell.removeAttribute('data-type');
+                
+                showMessage(`发现宝箱! +${exp} 经验, +${gold} 金币`);
+                
+            } else if (type === 'hero') {
+                // 获得技能/buff
+                const exp = Math.floor(Math.random() * 15) + 5;
+                addExp(exp);
+                
+                cell.textContent = '⭐';
+                cell.className = 'excel-cell';
+                cell.removeAttribute('data-type');
+                
+                showMessage(`获得技能强化! +${exp} 经验`);
+                
+            } else {
+                // 普通单元格 - 小量经验
+                if (Math.random() < 0.1) { // 10% 概率获得经验
+                    const exp = Math.floor(Math.random() * 3) + 1;
+                    addExp(exp);
+                    showMessage(`数据分析完成 +${exp} 经验`);
+                }
+            }
+            
+            updateDisplay();
+        }
+
+        // 增加经验值
+        function addExp(amount) {
+            gameState.exp += amount;
+            
+            // 检查升级
+            while (gameState.exp >= gameState.expNeeded) {
+                gameState.exp -= gameState.expNeeded;
+                gameState.level++;
+                gameState.expNeeded = Math.floor(gameState.expNeeded * 1.5);
+                
+                showMessage(`🎉 等级提升! 现在是 ${gameState.level} 级!`);
+                
+                // 升级时刷新地图
+                setTimeout(() => {
+                    refreshGameElements();
+                }, 1000);
+            }
+        }
+
+        // 刷新游戏元素
+        function refreshGameElements() {
+            const cells = document.querySelectorAll('.excel-cell');
+            let addedElements = 0;
+            
+            cells.forEach(cell => {
+                if (!cell.getAttribute('data-type') && addedElements < 15) {
+                    if (Math.random() < 0.05) { // 5% 概率添加新元素
+                        const type = Math.random();
+                        if (type < 0.4) {
+                            cell.className = 'excel-cell monster-cell';
+                            cell.textContent = gameData.monsters[Math.floor(Math.random() * gameData.monsters.length)];
+                            cell.setAttribute('data-type', 'monster');
+                        } else if (type < 0.7) {
+                            cell.className = 'excel-cell treasure-cell';
+                            cell.textContent = gameData.treasures[Math.floor(Math.random() * gameData.treasures.length)];
+                            cell.setAttribute('data-type', 'treasure');
+                        } else {
+                            cell.className = 'excel-cell game-cell';
+                            cell.textContent = gameData.heroes[Math.floor(Math.random() * gameData.heroes.length)];
+                            cell.setAttribute('data-type', 'hero');
+                        }
+                        addedElements++;
+                    }
+                }
+            });
+        }
+
+        // 显示消息
+        function showMessage(message) {
+            const messageEl = document.getElementById('gameMessage');
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 2000);
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            // 更新状态栏
+            document.getElementById('gameStatus').textContent = 
+                `经验值: ${gameState.exp}/${gameState.expNeeded} | 等级: ${gameState.level}`;
+            
+            // 更新游戏面板
+            document.getElementById('playerLevel').textContent = gameState.level;
+            document.getElementById('playerExp').textContent = `${gameState.exp}/${gameState.expNeeded}`;
+            document.getElementById('playerGold').textContent = gameState.gold;
+            document.getElementById('monstersKilled').textContent = gameState.monstersKilled;
+            document.getElementById('treasuresFound').textContent = gameState.treasuresFound;
+            
+            const expPercent = (gameState.exp / gameState.expNeeded) * 100;
+            document.getElementById('expBar').style.width = `${expPercent}%`;
+            
+        }
+
+        // 切换游戏面板
+        function toggleGamePanel() {
+            const panel = document.getElementById('gamePanel');
+            panel.classList.toggle('show');
+        }
+
+        // 显示游戏统计
+        function showGameStats() {
+            const panel = document.getElementById('gamePanel');
+            panel.classList.add('show');
+            showMessage('数据透视表已更新');
+        }
+
+        // 自动刷新游戏元素
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% 概率刷新
+                refreshGameElements();
+            }
+        }, 30000); // 每30秒
+
+        // 初始化
+        createWorksheet();
+        updateDisplay();
+        
+        // 自动保存游戏状态（伪装成Excel自动保存）
+        setInterval(() => {
+            if (Math.random() < 0.1) {
+                showMessage('工作簿已自动保存');
+            }
+        }, 45000);
+    </script>
+</body>
+</html>
